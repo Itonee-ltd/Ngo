@@ -1,6 +1,6 @@
 // src/utilities/apiResponse.ts
 import { Response } from 'express';
-import { IUser, ApiResponse, IUserResponse } from '../interface';
+import { IUser, ApiResponse, IUserResponse, IApplicationResponse } from '../interface';
 
 export class ApiResponseHelper {
     /**
@@ -123,5 +123,46 @@ export const userStructure = (user: IUser | any): IUserResponse => {
         emailVerified: userObj.emailVerified,
         createdAt: userObj.createdAt,
         updatedAt: userObj.updatedAt
+    };
+};
+
+/**
+ * Structure application data for API responses (remove sensitive fields)
+ */
+export const applicationStructure = (application: any): IApplicationResponse => {
+    // Handle both Mongoose documents and plain objects
+    let appObj: any;
+    
+    if (application && typeof application.toObject === 'function') {
+        appObj = application.toObject();
+    } else if (application && typeof application.toJSON === 'function') {
+        appObj = application.toJSON();
+    } else {
+        appObj = application;
+    }
+
+    return {
+        id: appObj._id || appObj.id,
+        applicationNumber: appObj.applicationNumber,
+        applicantId: appObj.applicantId,
+        applicationType: appObj.applicationType,
+        title: appObj.title,
+        description: appObj.description,
+        academicInfo: appObj.academicInfo,
+        financialInfo: appObj.financialInfo,
+        guardianInfo: appObj.guardianInfo,
+        schoolSupportData: appObj.schoolSupportData,
+        orphanageData: appObj.orphanageData,
+        supportingDocuments: appObj.supportingDocuments,
+        status: appObj.status,
+        priority: appObj.priority,
+        submittedAt: appObj.submittedAt,
+        lastUpdatedAt: appObj.lastUpdatedAt,
+        currentReview: appObj.currentReview,
+        assignedTo: appObj.assignedTo,
+        estimatedCompletionDate: appObj.estimatedCompletionDate,
+        tags: appObj.tags,
+        createdAt: appObj.createdAt,
+        updatedAt: appObj.updatedAt
     };
 };

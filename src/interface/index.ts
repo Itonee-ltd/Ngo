@@ -100,3 +100,7 @@ export interface IUserResponse {
     createdAt: Date;
     updatedAt: Date;
 }
+
+// Application related interfaces - Import from application.ts
+export * from './application';
+

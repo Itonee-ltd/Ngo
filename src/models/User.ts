@@ -1,6 +1,6 @@
 // src/models/User.ts
-import mongoose, { Schema } from "mongoose";
-import { IUser, UserRoleEnum, IAddress, IIdentityVerification } from "../interface";
+import mongoose, { Schema, Model } from "mongoose";
+import { IUserDocument, UserRoleEnum, IAddress, IIdentityVerification } from "../interface";
 
 const addressSchema = new Schema<IAddress>({
     street: { type: String },
@@ -19,7 +19,21 @@ const identityVerificationSchema = new Schema<IIdentityVerification>({
     idImageUrl: { type: String }
 }, { _id: false });
 
-const userSchema = new Schema<IUser>({
+// Define interface for instance methods (if you have any custom methods)
+interface IUserMethods {
+    // Add any custom instance methods here if needed
+}
+
+// Define interface for static methods (if you have any custom statics)
+interface IUserStatics {
+    // Add any custom static methods here if needed
+}
+
+// Combine document with methods
+type UserDocument = IUserDocument & IUserMethods;
+type UserModel = Model<UserDocument> & IUserStatics;
+
+const userSchema = new Schema<UserDocument, UserModel>({
     firstName: { type: String, trim: true },
     lastName: { type: String, trim: true },
     email: {
@@ -81,5 +95,5 @@ userSchema.methods.toJSON = function() {
     return userObject;
 };
 
-const UserModel = mongoose.model<IUser>('User', userSchema);
+const UserModel = mongoose.model<UserDocument, UserModel>('User', userSchema);
 export default UserModel;
