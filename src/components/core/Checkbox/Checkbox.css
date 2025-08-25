@@ -1,0 +1,8 @@
+input:checked {
+    accent-color: rgb(90, 159, 90);
+}
+
+input[type="checkbox"] {
+    height: 20px; /* Adjust this value to change the checkbox size */
+    width: 20px; /* Adjust this value to change the checkbox size */
+}
