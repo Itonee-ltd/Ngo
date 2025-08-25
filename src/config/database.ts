@@ -17,13 +17,11 @@ export const connect = async (Url: string) => {
     try {
         // Configure for serverless
         const connectDb = await mongoose.connect(Url as string, {
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-            maxPoolSize: 10, // Maintain up to 10 socket connections
-            serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-            socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-            bufferCommands: false, // Disable mongoose buffering
-            bufferMaxEntries: 0 // Disable mongoose buffering
+            serverSelectionTimeoutMS: 5000,  // Only once - removed duplicate
+            socketTimeoutMS: 45000,          // Only once - removed duplicate
+            maxPoolSize: 10,                 // Maintain up to 10 socket connections
+            bufferCommands: false            // Disable mongoose buffering
+            // Removed bufferMaxEntries - it's not a valid mongoose option
         });
         
         cachedConnection = connectDb;
@@ -58,6 +56,3 @@ mongoose.connection.on('disconnected', () => {
     console.log('Mongoose disconnected');
     cachedConnection = null; // Reset cache on disconnect
 });
-
-// Remove SIGINT handler for serverless - Vercel handles this
-// Serverless functions don't need graceful shutdown handling

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { IUser, AuthenticatedRequest, UserRoleEnum } from '../interface';
-import bcrypt from 'bcrypt';
+import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { userRepo } from '../repository/userRepo';
 import { ApiResponseHelper, userStructure } from '../utilities/apiResponse';
@@ -70,7 +70,7 @@ class AuthService {
             }
 
             // Hash password
-            const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_ROUNDS || '12'));
+            const hashedPassword = await bcryptjs.hash(password, parseInt(process.env.BCRYPT_ROUNDS || '12'));
 
             // Create user
             const newUser = await userRepo.create({
@@ -149,7 +149,7 @@ class AuthService {
             }
 
             // Verify password
-            const validPassword = await bcrypt.compare(password, user.password);
+            const validPassword = await bcryptjs.compare(password, user.password);
             if (!validPassword) {
                 return ApiResponseHelper.error(res, 'Invalid email or password', 401);
             }
@@ -200,7 +200,7 @@ class AuthService {
             }
 
             // Verify password
-            const validPassword = await bcrypt.compare(password, user.password);
+            const validPassword = await bcryptjs.compare(password, user.password);
             if (!validPassword) {
                 return ApiResponseHelper.error(res, 'Invalid admin credentials', 401);
             }
@@ -402,7 +402,7 @@ class AuthService {
             }
 
             // Hash new password
-            const hashedPassword = await bcrypt.hash(newPassword, parseInt(process.env.BCRYPT_ROUNDS || '12'));
+            const hashedPassword = await bcryptjs.hash(newPassword, parseInt(process.env.BCRYPT_ROUNDS || '12'));
 
             // Update user password and clear reset token
             await userRepo.update(user._id as string, {
@@ -440,13 +440,13 @@ class AuthService {
             }
 
             // Verify old password
-            const validPassword = await bcrypt.compare(oldPassword, user.password);
+            const validPassword = await bcryptjs.compare(oldPassword, user.password);
             if (!validPassword) {
                 return ApiResponseHelper.error(res, 'Invalid old password', 400);
             }
 
             // Hash new password
-            const hashedPassword = await bcrypt.hash(newPassword, parseInt(process.env.BCRYPT_ROUNDS || '12'));
+            const hashedPassword = await bcryptjs.hash(newPassword, parseInt(process.env.BCRYPT_ROUNDS || '12'));
 
             // Update password
             await userRepo.update(req.user.id, { 
@@ -480,7 +480,7 @@ class AuthService {
             }
 
             // Hash password
-            const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_ROUNDS || '12'));
+            const hashedPassword = await bcryptjs.hash(password, parseInt(process.env.BCRYPT_ROUNDS || '12'));
 
             // Create the first admin user
             const admin = await userRepo.create({
