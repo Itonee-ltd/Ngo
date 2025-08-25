@@ -1,4 +1,4 @@
+// /api/index.ts (in root, not in src)
 import app from "../src/app";
 
-// Vercel will call this by default
 export default app;
