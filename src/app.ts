@@ -75,3 +75,6 @@ process.on('unhandledRejection', (err: Error) => {
 });
 
 export default app;
+
+// Add this line anywhere in your app.ts
+console.log('Deployment test - v1.1'); // Change version number each time
