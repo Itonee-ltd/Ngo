@@ -36,6 +36,22 @@ export default function useLogin() {
     },
     onError(error: any) {
       toast.error(error?.response?.data?.message);
+
+      console.log("API Error:", error);
+    
+    // Handle different error scenarios
+    if (error.response) {
+      // Server responded with error status
+      console.error("Response error:", error.response.status, error.response.data);
+    } else if (error.request) {
+      // Request was made but no response received
+      console.error("Network error:", error.request);
+    } else {
+      // Something else happened
+      console.error("Error:", error.message);
+    }
+    
+    return Promise.reject(error);
     },
   });
 

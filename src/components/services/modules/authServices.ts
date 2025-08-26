@@ -23,13 +23,13 @@ const createAccount = async (payload: {
   first_name: string;
   password: string;
 }) => {
-  const response = await apiClient.post('/user/auth/individual', payload);
+  const response = await apiClient.post('/auth/register', payload);
 
   return response;
 };
 
 const verifyEmail = async (payload: { token: string }) => {
-  const response = await apiClient.post('/user/auth/verify-email', payload);
+  const response = await apiClient.post('/auth/verify-email', payload);
 
   return response;
 };
