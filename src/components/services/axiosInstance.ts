@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: 'https://ngo-j3k9m8ftd-itonees-projects.vercel.app/api/v1/',
+  baseURL: 'https://ngo-5yp7rsr1e-itonees-projects.vercel.app/api/v1/',
   headers: {
     "Content-Type": "application/json",
   },

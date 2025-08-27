@@ -40,7 +40,7 @@ const AboutUs = () => {
             <div className="bg-[#96BB7C] p-6 md:p-8 rounded-xl shadow-xl border border-gray-700 flex-1 max-w-md">
               <h2 className="text-3xl font-bold text-blue-400 mb-4">Vision</h2>
               <p className="text-white leading-relaxed">
-                To reform orphanes and less previledged in Nigeria into children to future leader.
+                Our vision is a world where every child has equal access to education, opportunities, and the support they need to succeed. We strive to build a future where no child is left behind because of financial hardship, and where education becomes the bridge to brighter lives and stronger communities.
               </p>
             </div>
 
@@ -48,7 +48,7 @@ const AboutUs = () => {
             <div className="bg-[#96BB7C] p-6 md:p-8 rounded-xl shadow-xl border border-gray-700 flex-1 max-w-md">
               <h2 className="text-3xl font-bold text-blue-400 mb-4">Mission</h2>
               <p className="text-white leading-relaxed">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolore iste commodi ipsam iure magnam, optio expedita, quaerat recusandae aperiam esse saepe eum facilis ab. Aperiam ab nostrum numquam iure dolor aspernatur molestias commodi fugit ipsa, similique aliquam repudiandae excepturi quia a, cum dolorum ex saepe?
+                 Our mission is to break the cycle of poverty by empowering underprivileged children through access to quality education. We provide scholarships, mentorship, and essential resources to ensure every child regardless of background has the opportunity to learn, grow, and reach their fullest potential. We believe that investing in children today creates leaders and changemakers for tomorrow.
               </p>
             </div>
           </div>
