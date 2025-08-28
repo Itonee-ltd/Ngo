@@ -5,27 +5,10 @@ import jwt from 'jsonwebtoken';
 import { userRepo } from '../repository/userRepo';
 import { ApiResponseHelper, userStructure } from '../utilities/apiResponse';
 import { sendAwsEmail } from '../config/aws-ses';
+import { database } from '../config'; // Import database helper
 import dotenv from 'dotenv';
 
 dotenv.config();
-
-// JWT Token generation helper
-// const generateToken = (payload: object): string => {
-//     const jwtSecret = process.env.JWT_SECRET;
-//     if (!jwtSecret) {
-//         throw new Error('JWT_SECRET is not defined in environment variables');
-//     }
-
-//     const token = jwt.sign(
-//         payload,
-//         jwtSecret,
-//         { 
-//             expiresIn: process.env.JWT_EXPIRES_IN || '7d'
-//         }
-//     );
-
-//     return token;
-// };
 
 interface JwtPayload {
     id: string;
@@ -48,10 +31,24 @@ const generateToken = (payload: JwtPayload): string => {
 
 class AuthService {
     /**
+     * Ensure database connection before operations
+     */
+    private async ensureDbConnection() {
+        const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+        if (!mongoUri) {
+            throw new Error('MONGODB_URI or MONGO_URI environment variable is not set');
+        }
+        await database.ensureConnection(mongoUri);
+    }
+
+    /**
      * User Registration
      */
     async register(req: Request, res: Response) {
         try {
+            // CRITICAL: Ensure database connection first
+            await this.ensureDbConnection();
+
             const { email, password, firstName, lastName, phone } = req.body;
 
             // Validation
@@ -131,6 +128,9 @@ class AuthService {
      */
     async login(req: Request, res: Response) {
         try {
+            // Ensure database connection
+            await this.ensureDbConnection();
+
             const { email, password } = req.body;
 
             if (!email || !password) {
@@ -181,6 +181,9 @@ class AuthService {
      */
     async adminLogin(req: Request, res: Response) {
         try {
+            // Ensure database connection
+            await this.ensureDbConnection();
+
             const { email, password } = req.body;
 
             if (!email || !password) {
@@ -232,6 +235,9 @@ class AuthService {
      */
     async verifyEmail(req: Request, res: Response) {
         try {
+            // Ensure database connection
+            await this.ensureDbConnection();
+
             const { email, otp } = req.body;
 
             if (!email || !otp) {
@@ -268,6 +274,9 @@ class AuthService {
      */
     async requestEmailVerification(req: Request, res: Response) {
         try {
+            // Ensure database connection
+            await this.ensureDbConnection();
+
             const { email } = req.body;
 
             if (!email) {
@@ -316,6 +325,9 @@ class AuthService {
      */
     async forgotPassword(req: Request, res: Response) {
         try {
+            // Ensure database connection
+            await this.ensureDbConnection();
+
             const { email } = req.body;
 
             if (!email) {
@@ -361,6 +373,9 @@ class AuthService {
      */
     async verifyPasswordResetToken(req: Request, res: Response) {
         try {
+            // Ensure database connection
+            await this.ensureDbConnection();
+
             const { email, token } = req.body;
 
             if (!email || !token) {
@@ -385,6 +400,9 @@ class AuthService {
      */
     async resetPassword(req: Request, res: Response) {
         try {
+            // Ensure database connection
+            await this.ensureDbConnection();
+
             const { email, token, newPassword } = req.body;
 
             if (!email || !token || !newPassword) {
@@ -423,6 +441,9 @@ class AuthService {
      */
     async changePassword(req: AuthenticatedRequest, res: Response) {
         try {
+            // Ensure database connection
+            await this.ensureDbConnection();
+
             const { oldPassword, newPassword } = req.body;
 
             if (!oldPassword || !newPassword) {
@@ -466,6 +487,9 @@ class AuthService {
      */
     async setupInitialAdmin(req: Request, res: Response) {
         try {
+            // Ensure database connection
+            await this.ensureDbConnection();
+
             // Check if any admin users exist
             const existingAdmin = await userRepo.byQuery({ role: UserRoleEnum.ADMIN });
 
@@ -510,6 +534,9 @@ class AuthService {
      */
     async getProfile(req: AuthenticatedRequest, res: Response) {
         try {
+            // Ensure database connection
+            await this.ensureDbConnection();
+
             const user = await userRepo.byID(req.user.id);
             if (!user) {
                 return ApiResponseHelper.error(res, 'User not found', 404);
@@ -531,6 +558,9 @@ class AuthService {
      */
     async updateProfile(req: AuthenticatedRequest, res: Response) {
         try {
+            // Ensure database connection
+            await this.ensureDbConnection();
+
             const { firstName, lastName, phone, address } = req.body;
 
             const updatedUser = await userRepo.update(req.user.id, {

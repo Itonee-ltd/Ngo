@@ -1,153 +1,86 @@
-// app.ts
-import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
-import helmet from "helmet";
-import bodyParser from "body-parser";
-import rateLimit from "express-rate-limit";
-import { database } from "./config";
-import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
-import routes from "./routes"; // Import the main router
+// src/app.ts - Updated Express configuration
+import express from 'express';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import { database } from './config';
+import routes from './routes';
+import { errorHandler } from './middleware/errorHandler';
+import dotenv from 'dotenv';
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-app.set('trust proxy', true);
+// Trust proxy for rate limiting (fix the ValidationError)
+app.set('trust proxy', 1); // Trust first proxy
 
-// Debug Environment Variables
-console.log('🔍 Debug Environment Variables:', {
-    // CORS_ORIGIN: process.env.CORS_ORIGIN,
-    NODE_ENV: process.env.NODE_ENV,
-    MONGO_URI: process.env.MONGO_URI ? 'Connected' : 'Missing'
-});
-
-// Connect to the database
-database.connect(process.env.MONGO_URI as string);
-
-// Security Middleware
-app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
+// CORS Configuration
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: true
 }));
 
-// CORS Configuration - Must be BEFORE routes
-// app.use(cors({
-//     origin: (origin, callback) => {
-//         console.log('🌐 CORS Origin Check:', { 
-//             requestOrigin: origin, 
-//             allowedOrigin: process.env.CORS_ORIGIN,
-//             method: 'Dynamic Check'
-//         });
-        
-//         // Allow requests with no origin (mobile apps, Postman, etc.)
-//         if (!origin) return callback(null, true);
-        
-//         // Allow all origins for development/testing
-//         const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['*'];
-//         if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-//             return callback(null, true);
-//         }
-        
-//         // For debugging - allow all for now
-//         callback(null, true);
-//     },
-//     credentials: true,
-//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-//     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-// }));
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-app.use(cors());
-
-// Handle preflight requests explicitly
-app.options('*', (req, res) => {
-    console.log('🚀 Preflight request for:', req.url);
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.sendStatus(200);
-});
-
-// Rate Limiting
+// Rate limiting with proper configuration
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Max 100 requests per 15 minutes per IP
-    message: "Too many requests from this IP, please try again after 15 minutes"
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'), // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+    // Fix the trust proxy issue by providing a proper key generator
+    keyGenerator: (req) => {
+        // Use the real IP from behind proxy
+        return req.ip || req.connection.remoteAddress || 'unknown';
+    }
 });
-app.use(limiter);
 
-// Body Parsing Middleware
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use('/api', limiter);
 
-// Test route to verify CORS
-app.get('/api/v1/test-cors', (req, res) => {
+// Routes
+app.use('/api/v1', routes);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
     res.json({ 
-        success: true,
-        message: 'CORS test successful',
+        status: 'OK', 
         timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV,
-        corsOrigin: process.env.CORS_ORIGIN,
-        requestOrigin: req.get('origin')
+        environment: process.env.NODE_ENV 
     });
 });
 
-// Debug route to check all routes
-app.get('/api/v1/debug/routes', (req, res) => {
-    console.log('📋 Available routes debug requested');
-    res.json({
-        success: true,
-        message: 'Routes debug endpoint',
-        environment: process.env.NODE_ENV,
-        availableRoutes: [
-            'GET /api/v1/test-cors',
-            'GET /api/v1/debug/routes',
-            'Your other routes should appear here'
-        ]
+// Error handling middleware (must be last)
+app.use(errorHandler);
+
+// Initialize database connection on startup
+const initializeApp = async () => {
+    try {
+        const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+        if (mongoUri) {
+            await database.connect(mongoUri);
+            console.log('✅ Database connection initialized');
+        } else {
+            console.warn('⚠️ No MongoDB URI provided');
+        }
+    } catch (error) {
+        console.error('❌ Failed to initialize database:', error);
+    }
+};
+
+// Start server
+const PORT = process.env.PORT || 5000;
+
+if (require.main === module) {
+    initializeApp().then(() => {
+        app.listen(PORT, () => {
+            console.log(`🚀 Server is running on port ${PORT}`);
+            console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+            console.log(`🔒 CORS Origin: ${process.env.CORS_ORIGIN}`);
+        });
     });
-});
-
-// Log all incoming requests for debugging
-app.use((req, res, next) => {
-    console.log(`📝 ${req.method} ${req.url} - Origin: ${req.get('origin') || 'none'}`);
-    next();
-});
-
-// Main Routes
-app.use("/api/v1", routes);
-
-// Root route
-app.get('/', (req, res) => {
-    res.json({
-        success: true,
-        message: "NGO Grant Management System API is running",
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV
-    });
-});
-
-// Error Handlers
-app.use(notFoundHandler); // Handle 404 Not Found
-app.use(errorHandler); // Global Error Handler
-
-// Start the server
-const server = app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
-    console.log(`🔒 CORS Origin: ${process.env.CORS_ORIGIN}`);
-});
-
-// Handle unhandled rejections
-process.on('unhandledRejection', (err: Error) => {
-    console.error(`Logged Error: ${err.name} - ${err.message}`);
-    server.close(() => {
-        process.exit(1);
-    });
-});
+}
 
 export default app;
-
-// Deployment test
-console.log('Deployment test - v1.2');
