@@ -19,7 +19,7 @@ app.set('trust proxy', true);
 
 // Debug Environment Variables
 console.log('🔍 Debug Environment Variables:', {
-    CORS_ORIGIN: process.env.CORS_ORIGIN,
+    // CORS_ORIGIN: process.env.CORS_ORIGIN,
     NODE_ENV: process.env.NODE_ENV,
     MONGO_URI: process.env.MONGO_URI ? 'Connected' : 'Missing'
 });
@@ -33,30 +33,32 @@ app.use(helmet({
 }));
 
 // CORS Configuration - Must be BEFORE routes
-app.use(cors({
-    origin: (origin, callback) => {
-        console.log('🌐 CORS Origin Check:', { 
-            requestOrigin: origin, 
-            allowedOrigin: process.env.CORS_ORIGIN,
-            method: 'Dynamic Check'
-        });
+// app.use(cors({
+//     origin: (origin, callback) => {
+//         console.log('🌐 CORS Origin Check:', { 
+//             requestOrigin: origin, 
+//             allowedOrigin: process.env.CORS_ORIGIN,
+//             method: 'Dynamic Check'
+//         });
         
-        // Allow requests with no origin (mobile apps, Postman, etc.)
-        if (!origin) return callback(null, true);
+//         // Allow requests with no origin (mobile apps, Postman, etc.)
+//         if (!origin) return callback(null, true);
         
-        // Allow all origins for development/testing
-        const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['*'];
-        if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
+//         // Allow all origins for development/testing
+//         const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['*'];
+//         if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+//             return callback(null, true);
+//         }
         
-        // For debugging - allow all for now
-        callback(null, true);
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+//         // For debugging - allow all for now
+//         callback(null, true);
+//     },
+//     credentials: true,
+//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+//     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+// }));
+
+app.use(cors());
 
 // Handle preflight requests explicitly
 app.options('*', (req, res) => {
@@ -82,7 +84,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Test route to verify CORS
 app.get('/api/v1/test-cors', (req, res) => {
-    res.header('Access-Control-Allow-Origin', '*');
     res.json({ 
         success: true,
         message: 'CORS test successful',
